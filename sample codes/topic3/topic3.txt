@@ -1,0 +1,740 @@
+# Lab 5 Exercise 1 - Simulate Niryo One in RViz 
+
+(terminal 1)
+$ roslaunch niryo_one_description display.launch
+
+(terminal 2)
+$ rosnode list 
+$ rostopic list
+$ rqt_graph
+
+(terminal 3)
+$ roslaunch niryo_one_moveit_config demo.launch
+
+
+# Lab 5 Exercise 2 - Control Niryo One with ROS Python Programming – Simulation Mode
+
+$ roslaunch niryo_one_bringup desktop_rviz_simulation.launch
+$ cd ~/catkin_ws/src/niryo_one_ros/niryo_one_python_api/examples
+$ chmod a+x move_joints.py 
+$ python move_joints.py
+$ rostopic pub /my_topic std_msgs/String "data: 'your_message'"
+
+#!/usr/bin/env python
+import rospy
+from std_msgs.msg import String
+from trajectory_msgs.msg import JointTrajectory
+from trajectory_msgs.msg import JointTrajectoryPoint
+
+pub = rospy.Publisher('/niryo_one_follow_joint_trajectory_controller/command', JointTrajectory, queue_size=10)
+
+def myTopicCallback(data):
+	rospy.loginfo("I heard %s", data.data)
+	join_trajectory = JointTrajectory()
+	join_trajectory.header.stamp = rospy.Time.now()
+	
+	join_trajectory.joint_names.append("joint_1")
+	join_trajectory.joint_names.append("joint_2")
+	join_trajectory.joint_names.append("joint_3")
+	join_trajectory.joint_names.append("joint_4")
+	join_trajectory.joint_names.append("joint_5")
+	join_trajectory.joint_names.append("joint_6")
+
+	joint_trajectory_point = JointTrajectoryPoint()
+	joint_trajectory_point.time_from_start.secs = 1
+	joint_trajectory_point.positions.append(0.2)
+	joint_trajectory_point.positions.append(0.5)
+	joint_trajectory_point.positions.append(0.0)
+	joint_trajectory_point.positions.append(0.1)
+	joint_trajectory_point.positions.append(0.4)
+	joint_trajectory_point.positions.append(0.0)
+
+	join_trajectory.points.append(joint_trajectory_point)
+pub.publish(join_trajectory)
+
+def my_script():
+	rospy.init_node('my_node', anonymous=True)
+	rospy.Subscriber("my_topic", String, myTopicCallback)
+	rospy.spin()
+
+if __name__ == '__main__':
+	my_script()
+
+
+# Lab 5 Exercise 3 - Control Niryo One Using Python API – Simulation Mode
+
+# Move Joints
+$ chmod a+x api_test1.py 
+$ python api_test1.py
+
+#!/usr/bin/env python 
+# To use the API, copy these 4 lines on each Python file you create
+from niryo_one_python_api.niryo_one_api import *
+import rospy
+import time
+import math
+ 
+rospy.init_node('test_api')
+ 
+print "--- Start"
+ 
+n = NiryoOne()
+ 
+# Move
+
+n.set_arm_max_velocity(30)
+ 
+joint_target = [math.radians(45), -math.pi/4.0, math.pi/4.0, 1.57/2, 0.0, 0.0]
+n.move_joints(joint_target)
+ 
+print "--- End"
+
+#Robot positions 
+current_joints_array = n.get_joints()
+print "\nCurrent joints: "
+print current_joints_array
+current_position = n.get_arm_pose()
+print "\nCurrent pose: "
+print current_position
+
+# Move Pose
+$ chmod a+x api_test2.py 
+$ python api_test2.py
+
+#!/usr/bin/env python
+# To use the API, copy these 4 lines on each Python file you create
+from niryo_one_python_api.niryo_one_api import *
+import rospy
+import time
+import math
+ 
+rospy.init_node('test_api2')
+ 
+print "--- Start"
+ 
+n = NiryoOne()
+ 
+# Move
+n.set_arm_max_velocity(30)
+ 
+n.move_pose(0.2, 0, 0.2, 0, math.radians(90), 0)
+next_pose = [0.25, 0.1, 0.2, 0.0, math.radians(90), 0.0]
+n.move_pose(*next_pose)
+ 
+print "--- End"
+
+#Robot positions 
+current_joints_array = n.get_joints()
+print "\nCurrent joints: "
+print current_joints_array
+current_position = n.get_arm_pose()
+print "\nCurrent pose: "
+print current_position
+
+# Shift Pose
+$ chmod a+x api_test3.py 
+$ python api_test3.py
+
+#!/usr/bin/env python 
+# To use the API, copy these 4 lines on each Python file you create
+from niryo_one_python_api.niryo_one_api import *
+import rospy
+import time
+import math
+ 
+rospy.init_node('test_api3')
+ 
+print "--- Start"
+ 
+n = NiryoOne()
+ 
+# Move
+n.set_arm_max_velocity(30)
+ 
+n.move_pose(0.2, 0, 0.2, 0, math.radians(90), 0)
+n.shift_pose(AXIS_Y, 0.3)
+n.shift_pose(ROT_YAW, math.radians(-45))
+ 
+print "--- End"
+
+#Robot positions 
+current_joints_array = n.get_joints()
+print "\nCurrent joints: "
+print current_joints_array
+current_position = n.get_arm_pose()
+print "\nCurrent pose: "
+print current_position
+
+
+# Move from Pose 1 to 2 Repeatedly
+$ chmod a+x api_test3.py 
+$ python api_test3.py
+
+#!/usr/bin/env python 
+# To use the API, copy these 4 lines on each Python file you create
+from niryo_one_python_api.niryo_one_api import *
+import rospy
+import time
+import math
+ 
+rospy.init_node('test_api3b')
+ 
+print "--- Start"
+ 
+n = NiryoOne()
+ 
+for i in range(1,4) :
+	# move the robot to the position P1
+	n.move_pose( -0.03, -0.156, 0.48, -0.58, -0.58, -0.145)
+	time.sleep(3)
+	pose_actuel_1 = n.get_arm_pose() 
+	print pose_actuel_1
+	# move the robot to the position P2
+	n.move_pose( -0.136, -0.133, 0.255, -0.081, 0.744, -2.535)
+	time.sleep (3)
+	pose_actuel_2 = n.get_arm_pose() 
+	print pose_actuel_2
+
+
+# Lab 5 Exercise 4: Control Niryo One Using Python API – Physical Robot Mode
+
+# Calibrate the Robots
+$ chmod a+x api_test4.py 
+$ python api_test4.py
+
+#!/usr/bin/env python 
+# To use the API, copy these 4 lines on each Python file you create
+from niryo_one_python_api.niryo_one_api import *
+import rospy
+import time
+import math
+ 
+rospy.init_node('test_api4')
+ 
+print "--- Start"
+ 
+n = NiryoOne()
+ 
+# Calibrate robot first
+n.calibrate_auto()
+#n.calibrate_manual()
+print "Calibration finished !\n"
+ 
+#Robot positions
+saved_positions = n.get_saved_position_list()
+print "\nSaved positions: "
+print saved_positions
+ 
+current_joints_array = n.get_joints()
+print "\nCurrent joints: "
+print current_joints_array
+current_position = n.get_arm_pose()
+print "\nCurrent pose: "
+
+# Move Joints
+$ chmod a+x api_test5.py 
+$ python api_test5.py
+
+#!/usr/bin/env python 
+# To use the API, copy these 4 lines on each Python file you create
+from niryo_one_python_api.niryo_one_api import *
+import rospy
+import time
+import math
+ 
+rospy.init_node('test_api6')
+ 
+print "--- Start"
+ 
+n = NiryoOne()
+
+# Deactivate learning mode
+n.activate_learning_mode(True)
+print "Learning mode deactivated? "
+print n.get_learning_mode()
+
+# Move Pose
+n.set_arm_max_velocity(30)
+ 
+n.move_pose(0.2, 0, 0.2, 0, math.radians(90), 0)
+next_pose = [0.25, 0.1, 0.2, 0.0, math.radians(90), 0.0]
+n.move_pose(*next_pose)
+ 
+print "--- End"
+
+#Robot positions 
+current_joints_array = n.get_joints()
+print "\nCurrent joints: "
+print current_joints_array
+current_position = n.get_arm_pose()
+print "\nCurrent pose: "
+print current_position
+
+# Activate learning mode
+n.activate_learning_mode(True)
+print "Learning mode Activated? "
+print n.get_learning_mode()
+
+# Move Pose
+$ chmod a+x api_test6.py 
+$ python api_test6.py
+
+#!/usr/bin/env python 
+# To use the API, copy these 4 lines on each Python file you create
+from niryo_one_python_api.niryo_one_api import *
+import rospy
+import time
+import math
+ 
+rospy.init_node('test_api6')
+ 
+print "--- Start"
+ 
+n = NiryoOne()
+
+# Deactivate learning mode
+ n.activate_learning_mode(True)
+ print "Learning mode deactivated? "
+ print n.get_learning_mode()
+
+# Move
+n.set_arm_max_velocity(30)
+ 
+n.move_pose(0.2, 0, 0.2, 0, math.radians(90), 0)
+next_pose = [0.25, 0.1, 0.2, 0.0, math.radians(90), 0.0]
+n.move_pose(*next_pose)
+ 
+print "--- End"
+
+#Robot positions 
+current_joints_array = n.get_joints()
+print "\nCurrent joints: "
+print current_joints_array
+current_position = n.get_arm_pose()
+print "\nCurrent pose: "
+print current_position
+
+# Activate learning mode
+n.activate_learning_mode(True)
+print "Learning mode Activated? "
+print n.get_learning_mode()
+
+# Shift Pose
+$ chmod a+x api_test7.py 
+$ python api_test7.py
+
+#!/usr/bin/env python 
+# To use the API, copy these 4 lines on each Python file you create
+from niryo_one_python_api.niryo_one_api import *
+import rospy
+import time
+import math
+ 
+rospy.init_node('test_api7')
+ 
+print "--- Start"
+ 
+n = NiryoOne()
+
+# Deactivate learning mode
+ n.activate_learning_mode(True)
+ print "Learning mode deactivated? "
+ print n.get_learning_mode()
+ 
+# Move
+n.set_arm_max_velocity(30)
+ 
+n.move_pose(0.2, 0, 0.2, 0, math.radians(90), 0)
+n.shift_pose(AXIS_Y, 0.3)
+n.shift_pose(ROT_YAW, math.radians(-45))
+ 
+print "--- End"
+
+#Robot positions 
+current_joints_array = n.get_joints()
+print "\nCurrent joints: "
+print current_joints_array
+current_position = n.get_arm_pose()
+print "\nCurrent pose: "
+print current_position
+
+# Activate learning mode
+n.activate_learning_mode(True)
+print "Learning mode Activated? "
+print n.get_learning_mode()
+
+# Move from Pose 1 to Pose 2 Repeatedly
+$ chmod a+x api_test7b.py 
+$ python api_test7b.py
+
+#!/usr/bin/env python
+ 
+# To use the API, copy these 4 lines on each Python file you create
+from niryo_one_python_api.niryo_one_api import *
+import rospy
+import time
+import math
+ 
+rospy.init_node('test_api7b')
+ 
+print "--- Start"
+ 
+n = NiryoOne()
+ 
+# deactivate the learning mode 
+n.activate_learning_mode(False) 
+
+for i in range(1,4) :
+	# move the robot to the position P1
+	n.move_pose( -0.03, -0.156, 0.48, -0.58, -0.58, -0.145)
+	time.sleep(3)
+	pose_actuel_1 = n.get_arm_pose() 
+	print pose_actuel_1
+	# move the robot to the position P2
+	n.move_pose( -0.136, -0.133, 0.255, -0.081, 0.744, -2.535)
+	time.sleep (3)
+	pose_actuel_2 = n.get_arm_pose() 
+	print pose_actuel_2
+
+# activate the learning mode 
+n.activate_learning_mode(True)
+
+ 
+# End Effectors
+$ chmod a+x api_test8.py 
+$ python api_test8.py
+
+#!/usr/bin/env python 
+# To use the API, copy these 4 lines on each Python file you create
+from niryo_one_python_api.niryo_one_api import *
+import rospy
+import time
+import math
+ 
+rospy.init_node('test_api7')
+ 
+print "--- Start"
+ 
+n = NiryoOne()
+
+# Deactivate learning mode
+ n.activate_learning_mode(True)
+ print "Learning mode deactivated? "
+ print n.get_learning_mode()
+ 
+# End effector
+
+# Test gripper
+n.change_tool(TOOL_GRIPPER_2_ID)
+print "\nCurrent tool id:"
+print n.get_current_tool_id()
+n.close_gripper(TOOL_GRIPPER_2_ID,500)
+n.wait(0.2)
+n.open_gripper(TOOL_GRIPPER_2_ID,500)
+
+# Test vacuum pump
+# n.change_tool(TOOL_VACUUM_PUMP_1_ID)
+# n.pull_air_vacuum_pump(TOOL_VACUUM_PUMP_1_ID)
+# time.sleep(1)
+# n.push_air_vacuum_pump(TOOL_VACUUM_PUMP_1_ID)
+
+# Test electromagnet on GPIO 2
+# pin = GPIO_1A
+# n.change_tool(TOOL_ELECTROMAGNET_1_ID) # Mount
+# n.setup_electromagnet(TOOL_ELECTROMAGNET_1_ID, pin)
+# n.activate_electromagnet(TOOL_ELECTROMAGNET_1_ID, pin)
+# time.sleep(2)
+# n.deactivate_electromagnet(TOOL_ELECTROMAGNET_1_ID, pin)
+
+n.change_tool(TOOL_NONE) # Unmount
+
+# Others
+print "\nHardware status: "
+print n.get_hardware_status()
+
+#Robot positions 
+current_joints_array = n.get_joints()
+print "\nCurrent joints: "
+print current_joints_array
+current_position = n.get_arm_pose()
+print "\nCurrent pose: "
+print current_position
+
+# Activate learning mode
+n.activate_learning_mode(True)
+print "Learning mode Activated? "
+print n.get_learning_mode()
+
+# Pick and Place
+$ chmod a+x api_test9.py 
+$ python api_test9.py
+
+
+#!/usr/bin/env python
+ 
+# To use the API, copy these 4 lines on each Python file you create
+from niryo_one_python_api.niryo_one_api import *
+import rospy
+import time
+import math
+ 
+rospy.init_node('test_api9')
+ 
+print "--- Start"
+
+n = NiryoOne() 
+
+''' if your robot is not calibrated, de-comment the next line ''' 
+#n.calibrate_auto()
+
+# Deactivate learning mode
+ n.activate_learning_mode(False)
+
+# Change tool 
+n.change_tool(TOOL_GRIPPER_1_ID)
+
+# move the robot to position P1
+n.move_pose( -0.03, -0.156, 0.48, -0.58, -0.58, -0.145)
+
+# open the gripper 
+n.open_gripper(TOOL_GRIPPER_1_ID, 500) 
+n.wait(1)
+
+# close the gripper 
+n.close_gripper(TOOL_GRIPPER_1_ID, 500)
+n.wait(1)
+
+# move the robot to position P2
+n.move_pose( -0.136, -0.133, 0.255, -0.081, 0.744, -2.535)
+n.wait(1)
+
+# open the gripper 
+n.open_gripper(TOOL_GRIPPER_1_ID, 500) 
+n.wait(1)
+
+#  return  to  the  initial  position  (you  can  define  yours)
+n.move_pose( 0.231, -0.083, 0.417, -0.010, 0, -0.347)
+n.wait(1) 
+
+n.activate_learning_mode(True)
+
+
+Lab 5 Exercise 5: Control Niryo One with ROS Python Programming – Physical Mode
+
+(terminal 1) 
+$ ssh niryo@<Niryo One IP>
+$ sudo systemctl stop niryo_one_ros.service
+$ roslaunch niryo_one_bringup rpi_setup.launch
+
+(terminal 2) 
+$ ssh niryo@<Niryo One IP>
+$ cd ~/catkin_ws/src/niryo_one_ros/niryo_one_python_api/examples
+$ python move_points.py
+
+(terminal 3) 
+$ ssh niryo@<Niryo One IP>
+$ rostopic pub /my_topic std_msgs/String "data: 'your_message'"
+
+#!/usr/bin/env python
+import rospy
+from std_msgs.msg import String
+from trajectory_msgs.msg import JointTrajectory
+from trajectory_msgs.msg import JointTrajectoryPoint
+
+pub = rospy.Publisher('/niryo_one_follow_joint_trajectory_controller/command', JointTrajectory, queue_size=10)
+
+def myTopicCallback(data):
+	rospy.loginfo("I heard %s", data.data)
+	join_trajectory = JointTrajectory()
+	join_trajectory.header.stamp = rospy.Time.now()
+	
+	join_trajectory.joint_names.append("joint_1")
+	join_trajectory.joint_names.append("joint_2")
+	join_trajectory.joint_names.append("joint_3")
+	join_trajectory.joint_names.append("joint_4")
+	join_trajectory.joint_names.append("joint_5")
+	join_trajectory.joint_names.append("joint_6")
+
+	joint_trajectory_point = JointTrajectoryPoint()
+	joint_trajectory_point.time_from_start.secs = 1
+	joint_trajectory_point.positions.append(0.2)
+	joint_trajectory_point.positions.append(0.5)
+	joint_trajectory_point.positions.append(0.0)
+	joint_trajectory_point.positions.append(0.1)
+	joint_trajectory_point.positions.append(0.4)
+	joint_trajectory_point.positions.append(0.0)
+
+	join_trajectory.points.append(joint_trajectory_point)
+pub.publish(join_trajectory)
+
+def my_script():
+	rospy.init_node('my_node', anonymous=True)
+	rospy.Subscriber("my_topic", String, myTopicCallback)
+	rospy.spin()
+
+if __name__ == '__main__':
+	my_script()
+
+
+# Lab 5 Exercise 6: Program Vision Set and Conveyor Belt with Python API
+
+# Vision Set
+
+(terminal 1) 
+$ ssh niryo@<Niryo One IP>
+$ sudo systemctl stop niryo_one_ros.service
+$ roslaunch niryo_one_bringup rpi_setup.launch
+
+(terminal 2) 
+$ ssh niryo@<Niryo One IP>
+$ cd ~/catkin_ws/src/niryo_one_ros/niryo_one_python_api/examples
+$ python api_test10.py
+
+#!/usr/bin/env python
+
+# To use the API, copy these 4 lines on each Python file you create
+from niryo_one_python_api.niryo_one_api import *
+import math
+import rospy
+import time
+import numpy as np
+import cv2
+
+
+def f(compressed_image):
+    np_arr = np.fromstring(compressed_image, np.uint8)
+    img = cv2.imdecode(np_arr, cv2.IMREAD_COLOR)
+    return img
+
+
+rospy.init_node('test_api10')
+print "--- Start"
+
+n = NiryoOne()
+
+try:
+    # Calibrate robot first
+    n.calibrate_auto()
+    print "Calibration finished !"
+
+    n.activate_learning_mode(False)
+
+    print "Go to observation position"
+    observation_pose = [0.12, 0.002, 0.35, 0, 1.57, 0]
+    n.move_pose(*observation_pose)
+
+    n.wait(1)
+    img = n.get_compressed_image()
+    img = f(img)
+
+    #filename = 'savedImage.jpg'
+    #cv2.imwrite(filename, img)
+
+    n.activate_learning_mode(True)
+
+except NiryoOneException as e:
+    print e
+    # handle exception here
+    # you can also make a try/except for each command separately
+
+print "--- End"
+
+# Conveyor Belt
+
+(terminal 1) 
+$ ssh niryo@<Niryo One IP>
+$ sudo systemctl stop niryo_one_ros.service
+$ roslaunch niryo_one_bringup rpi_setup.launch
+
+(terminal 2) 
+$ ssh niryo@<Niryo One IP>
+$ cd ~/catkin_ws/src/niryo_one_ros/niryo_one_python_api/examples
+$ python api_test11.py
+
+#!/usr/bin/env python
+
+# To use the API, copy these 4 lines on each Python file you create
+from niryo_one_python_api.niryo_one_api import *
+import math
+import rospy
+import time
+
+rospy.init_node('test_api11')
+
+print "--- Start"
+
+n = NiryoOne()
+
+try:
+    # Calibrate robot first
+    n.calibrate_auto()
+    print "Calibration finished !"
+
+    n.activate_learning_mode(True)
+    n.change_tool(TOOL_NONE)
+
+    # Workspace
+    markers_pose = []
+    #markers_pose.append(n.list_to_robot_state_msg([0.31771132845, 0.0790193649892, 0.0213579726515, -0.427132245935,1.45567609886,0.448715574241]))
+    #markers_pose.append(n.list_to_robot_state_msg([0.311330642353, -0.0812446470693, 0.0204788404218, -0.483396553297,1.2065375664,-0.249100212125]))
+    #markers_pose.append(n.list_to_robot_state_msg([0.150904489662, -0.0801233550758, 0.0312721628892, 3.03847870326,1.36710811344,2.63988429935]))
+    #markers_pose.append(n.list_to_robot_state_msg([0.152169323436, 0.0804375590226, 0.0313652150805, 2.99990155758, 1.35408319938,-2.663926013]))
+    #n.create_workspace("my_workspace", markers_pose[0], markers_pose[1], markers_pose[2], markers_pose[3])
+
+    print(
+        "Workspace calibration: \nThe pose arguments have to be such that the calibration tip touches center of the markers.")
+    for marker_number in range(4):
+        raw_input("Marker " + str(marker_number) + " (Press enter when the robot is correctly positioned")
+        markers_pose.append(n.get_arm_pose())
+    n.create_workspace("my_workspace", markers_pose[0], markers_pose[1], markers_pose[2], markers_pose[3])
+    print "Workspace calibration finished"
+    print "Workspace markers poses:"
+    print markers_pose
+
+    print "Workspace ratio: " + str(n.get_workspace_ratio("my_workspace"))
+    print "Workspace list: " + str(n.get_workspace_list())
+
+    n.activate_learning_mode(False)
+    print "Go to observation position"
+    observation_pose = n.get_target_pose_from_rel("my_workspace", 0.35, 0.5, 0.5, 0)
+    observation_pose = n.robot_state_msg_to_list(observation_pose)
+    n.move_pose(*observation_pose)
+
+    # Conveyor
+    conveyor_id = CONVEYOR_ID_ONE
+    n.set_conveyor(CONVEYOR_ID_ONE, True)
+    n.control_conveyor(conveyor_id, True, 100, CONVEYOR_DIRECTION_FORWARD)
+
+    # Pick/Place
+    raw_input("Connect Gripper2 and press 'Enter'")
+    n.change_tool(TOOL_GRIPPER_2_ID)
+    object_found = False
+    # Wait object
+    while not object_found:
+        n.wait(0.1)
+        object_found, rel_pose, obj_shape, obj_color = n.detect_object("my_workspace", SHAPE_SQUARE, COLOR_RED)
+    print "Object seen"
+
+    n.control_conveyor(conveyor_id, True, 0, CONVEYOR_DIRECTION_FORWARD)
+    # Wait conveyor speed=0
+    conveyor_id, connection_state, running, speed, direction = n.get_conveyor_1_feedback()
+    while not speed == 0:
+        n.wait(0.1)
+        conveyor_id, connection_state, running, speed, direction = n.get_conveyor_1_feedback()
+
+    # Pick
+    n.vision_pick("my_workspace", 0.0025, SHAPE_SQUARE, COLOR_RED)
+
+    #Place
+    place_pose = n.get_target_pose_from_rel("my_workspace", 0.0025, 0.5, 0.5, 0.45)
+    place_pose_raw = n.robot_state_msg_to_list(place_pose)
+    n.place_from_pose(*place_pose_raw)
+
+    n.activate_learning_mode(True)
+
+except NiryoOneException as e:
+    print e
+    # handle exception here
+    # you can also make a try/except for each command separately
+
+print "--- End"
