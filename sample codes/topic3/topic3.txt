@@ -13,8 +13,10 @@ $ roslaunch niryo_one_moveit_config demo.launch
 
 
 # Lab 5 Exercise 2 - Control Niryo One with ROS Python Programming – Simulation Mode
-
+(terminal 1)
 $ roslaunch niryo_one_bringup desktop_rviz_simulation.launch
+
+(terminal 2)
 $ cd ~/catkin_ws/src/niryo_one_ros/niryo_one_python_api/examples
 $ chmod a+x move_joints.py 
 $ python move_joints.py
@@ -64,8 +66,20 @@ if __name__ == '__main__':
 # Lab 5 Exercise 3 - Control Niryo One Using Python API – Simulation Mode
 
 # Move Joints
+(terminal 1) 
+
+$ roslaunch niryo_one_bringup desktop_rviz_simulation.launch
+
+(terminal 2) 
+$ source ~/catkin_ws/devel/setup.bash 
+$ export PYTHONPATH=${PYTHONPATH}:/home/niryo/catkin_ws/src/niryo_one_python_api/src/niryo_python_api
 $ chmod a+x api_test1.py 
 $ python api_test1.py
+
+# If you want to avoid typing this every time, you can automate this by including the following on your own .bashrc.
+# source ~/catkin_ws/devel/setup.bash 
+# export PYTHONPATH=${PYTHONPATH}:/home/niryo/catkin_ws/src/niryo_one_python_api/src/niryo_python_api
+
 
 #!/usr/bin/env python 
 # To use the API, copy these 4 lines on each Python file you create
